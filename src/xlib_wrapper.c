@@ -41,11 +41,20 @@ mrb_xw_fetch_window_class(mrb_state *mrb, mrb_value self)
 Window
 get_focused_window(Display *display)
 {
-  Window window;
+  unsigned int nchildren;
+  Window window, root, parent, *children;
   int focus_state;
 
   XGetInputFocus(display, &window, &focus_state);
-  return window;
+
+  if (window && !XQueryTree(display, window, &root, &parent, &children, &nchildren)) {
+    fprintf(stderr, "XQueryTree failed\n");
+    return window;
+  }
+
+  if (children) { XFree(children); }
+
+  return parent ? parent : window;
 }
 
 XKeyEvent
